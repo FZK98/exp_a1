@@ -37,7 +37,7 @@ def starPhotons(x_centre, y_centre, radius):
 			d = np.sqrt((i-x_centre)**2+(j-y_centre)**2)
 			if d<radius and mask[i][j]==0: #how to ensure we dont redo ones?
 				photon_vals.append(data[i][j])
-			mask[i][j] = 1
+				mask[i][j] = 1 #this way the value of the mask is changed only if it's used
 	photon_count = np.sum(photon_vals)
 	photon_no = len(photon_vals)
 	return(photon_count, photon_no)
