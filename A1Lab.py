@@ -20,8 +20,8 @@ hist_data_sorted=sorted(hist_data) #sort data points into ascending order
 background_data=[] #empty list - store the relevant background data
 hdulist.close()
 
-imagex = shape(data)[0]
-imagey = shape(data)[1]
+imagex = np.shape(data)[0]
+imagey = np.shape(data)[1]
 #stores ascending pixel values upto the value of 6000 
 #this excludes intrumental artifacts
 #for i in range(len(hist_data_sorted)):
@@ -67,6 +67,7 @@ print('pixel val 2 sig from the mean', xhistogram[np.abs(xhistogram - (popt[1]+ 
 print('pixel val 2 sig from the mean', xhistogram[np.abs(xhistogram - (popt[1]+ 3*popt[2])).argmin()])
 meanBackground = popt[1]
 sigmaBackground = popt[2]*1000 # this can be altered accordingly - used to determine if galaxy significant
+
 #0 value means pixel can be considered
 #1 value means pixel should be ignored
 mask = np.zeros((np.shape(data)[1],np.shape(data)[0])) #initiate a mask image (need to swap x and y round)
