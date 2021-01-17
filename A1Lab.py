@@ -71,17 +71,28 @@ sigmaBackground = popt[2]*1000 # this can be altered accordingly - used to deter
 #1 value means pixel should be ignored
 mask = np.zeros((np.shape(data)[1],np.shape(data)[0])) #initiate a mask image (need to swap x and y round)
 
+#sums values of pixels inside 1st aperture, pixels of galaxy
 def galaxyPhotons(x_centre,y_centre, radius):
 	photon_vals=[];
 	for i in range(x_centre-radius,x_centre+radius):
 		for j in range(y_centre-radius,y_centre+radius):
 			if i<imagex and i>=0 and j<imagey and j>=0: #only consider pixels within the image!
-				#(i,j)
 				d=np.sqrt((i-x_centre)**2+(j-y_centre)**2)
 				if d<radius: 
 					photon_vals.append(data[j][i])
 			mask[i][j]=1
 	return(np.sum(photon_vals))
+	
+#averages values of pixels between 1st and 2nd aperture, local bakcground mean	
+def localBackground(x_centre,y_centre, initialRadius, secondaryRadius):
+	bg_photon_vals=[];
+	for i in range(x_centre-secondaryRadius,x_centre+secondaryRadius):#outer x
+		for j in range(y_centre-secondaryRadius,y_centre+secondaryRadius):#outer y
+			if i<imagex and i>=0 and j<imagey and j>=0: #only consider pixels within the image!
+				d2=np.sqrt((i-x_centre)**2+(j-y_centre)**2)
+				if d2<secondaryRadius and d2>initialRadius: #only consider pixels between the two apertures
+					bg_photon_vals.append(data[j][i])
+	return(np.sum(bg_photon_vals)/len(bg_photon_vals))
 
 def pixelPos(data, value):
 	indices = np.where(data==value) #gives tuples of coordinates
@@ -90,8 +101,8 @@ def pixelPos(data, value):
 
 
 initialRadius = 12 #this can be varied as an extension to account for differently sized galaxies
-secondaryRadius=16 #this number needs to be better identified, but for now choose arbitrarily
-galaxyBrightnesses = []
+secondaryRadius=20 #this number needs to be better identified, but for now choose arbitrarily
+galaxyCounts = []
 
 for i in range(len(hist_data_sorted)): 
 	print(i/len(hist_data_sorted)*100)
@@ -101,8 +112,8 @@ for i in range(len(hist_data_sorted)):
 		for j in range(len(tempPixPos)): #potentially multiple locations with same pixel value
 			loc = tempPixPos[j]
 			if mask[loc[1]][loc[0]] == 0: #if pixel is available to use 
-				galaxyBrightnesses.append(galaxyPhotons(loc[1],loc[0],initialRadius))
-#it would be more efficient to assess mask image earlier, but unsure how to implement this
-	else:
-		break 
+				galaxyBrightness=galaxyPhotons(loc[1],loc[0],initialRadius)
+				galaxyBackground = localBackground(loc[1],loc[0],initialRadius, secondaryRadius)
+				galaxyCounts.append(galaxyBrightness-galaxyBackground)
+#it would be more efficient to assess mask image earlier, but unsure how to do this
 		
