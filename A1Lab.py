@@ -143,7 +143,7 @@ secondaryRadius=10 #this number needs to be better identified, but for now choos
 galaxyCounts = []
 
 for i in range(len(hist_data_sorted)): 
-	print(i/len(hist_data_sorted)*100)
+	print(i/len(hist_data_sorted)*100) #just prints how far through you are when running because it takes a while!
 	tempPixVal = hist_data_sorted[-(1+i)] #find next highest pixel value in image
 	if tempPixVal > meanBackground+sigmaBackground: #if the pixel is significantly brighter than background mean, continue
 		tempPixPos = pixelPos(data, tempPixVal) #find position of this pixel value
@@ -154,4 +154,3 @@ for i in range(len(hist_data_sorted)):
 				galaxyBackground = localBackground(loc[1],loc[0],initialRadius, secondaryRadius)
 				galaxyCounts.append(galaxyBrightness-galaxyBackground)
 #it would be more efficient to assess mask image earlier, but unsure how to do this
-"""		
