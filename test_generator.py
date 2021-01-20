@@ -12,15 +12,15 @@ image_size = 500
 import numpy as np
 import matplotlib.pyplot as plt
 
-basearray = np.zeros((image_size,image_size)) #test image
-masktest = np.zeros((image_size,image_size)) #mask image for test
+basearray = np.zeros((image_size,image_size*2)) #test image
+masktest = np.zeros((image_size,image_size*2)) #mask image for test
 
 for i in range(image_size):
-	for j in range(image_size):
+	for j in range(image_size*2):
 		basearray[i][j] = 100+np.random.randint(0,100) #assign background vals between 100-200
 		
 for i in range(no_objects):
-	object_loc.append(((np.random.randint(0,image_size)),(np.random.randint(0,image_size)))) #assing random locations to "galaxies"
+	object_loc.append(((np.random.randint(0,image_size)),(np.random.randint(0,image_size*2)))) #assigning random locations to "galaxies"
 	i += 1
 
 for i in range(no_objects):
@@ -46,12 +46,11 @@ def galaxyPhotons(x_centre,y_centre, radius):
 	photon_vals=[];
 	for i in range(x_centre-radius,x_centre+radius):
 		for j in range(y_centre-radius,y_centre+radius):
-			if i<500 and i>=0 and j<500 and j>=0: #only consider pixels within the image!
-				#(i,j)
+			if i<(image_size*2) and i>=0 and j<(image_size) and j>=0: #only consider pixels within the image
 				d=np.sqrt((i-x_centre)**2+(j-y_centre)**2)
 				if d<radius: 
-					photon_vals.append(basearray[j][i])
-			masktest[i][j]=1
+					photon_vals.append(basearray[i,j])
+			masktest[i,j]=1#this isn't working for some reason, whether inside if statement or not
 	return(np.sum(photon_vals))
 
 #averages values of pixels between 1st and 2nd aperture, local bakcground mean
@@ -59,10 +58,10 @@ def localBackground(x_centre,y_centre, initialRadius, secondaryRadius):
 	bg_photon_vals=[];
 	for i in range(x_centre-secondaryRadius,x_centre+secondaryRadius):#outer x
 		for j in range(y_centre-secondaryRadius,y_centre+secondaryRadius):#outer y
-			if i<500 and i>=0 and j<500 and j>=0: #only consider pixels within the image!
+			if i<(image_size*2) and i>=0 and j<(image_size) and j>=0: #only consider pixels within the image!
 				d2=np.sqrt((i-x_centre)**2+(j-y_centre)**2)
 				if d2<secondaryRadius and d2>initialRadius: #only consider pixels between the two apertures
-					bg_photon_vals.append(basearray[j][i])
+					bg_photon_vals.append(basearray[i,j])
 	return(np.sum(bg_photon_vals)/len(bg_photon_vals))
 
 def pixelPos(data, value):
@@ -71,8 +70,8 @@ def pixelPos(data, value):
 	return listIndices
 
 	
-initialRadius = 2
-secondaryRadius = 16
+initialRadius = 6
+secondaryRadius = 9
 galaxyCounts = []
 for i in range(len(base1d_sorted)): 
 	tempPixVal = base1d_sorted[-(1+i)] #find highest pixel value
@@ -80,9 +79,9 @@ for i in range(len(base1d_sorted)):
 		tempPixPos = pixelPos(basearray, tempPixVal) #find position of highest pixel value
 		for j in range(len(tempPixPos)): #potentially multiple locations with same pixel value
 			loc = tempPixPos[j]
-			if masktest[loc[1]][loc[0]] == 0: #if pixel is available to use 
+			if masktest[loc[1],loc[0]] == 0: #if pixel is available to use 
 				galaxyBrightness=galaxyPhotons(loc[1],loc[0],initialRadius)
-				galaxyBackground = localBackground(loc[1],loc[0],initialRadius, secondaryRadius)
+				galaxyBackground = 0#localBackground(loc[1],loc[0],initialRadius, secondaryRadius)
 				galaxyCounts.append(galaxyBrightness-galaxyBackground)
 				print(tempPixVal)
 plt.figure()
