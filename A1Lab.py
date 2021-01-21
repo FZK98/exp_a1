@@ -14,6 +14,7 @@ from scipy.optimize import curve_fit
 hdulist = fits.open("Mosaic.fits/mosaic.fits")#plt.imshow(data, cmap='gray')
 hdr=hdulist[0].header #meta data 
 data=hdulist[0].data #astro image data
+reduced_data = hdulist[0].data
 hist_data=data.ravel() #made data file a 1d array of pixel values 
 hist_data_sorted=sorted(hist_data) #sort data points into ascending order
 background_data=[] #empty list - store the relevant background data
@@ -74,19 +75,15 @@ for i in range (imagey):
         # masking pixel values below 2 std devs from the mean 
         if data[i][j] <= popt[1] + 2*popt[2]:
             mask[i][j] = 1
-
 #masking central vertical bloom
 mask[:,1425:1447] = 1
-
 #mask horizontal blooming
 mask[415:480,1195:1655] = 1
 mask[310:380,1020:1705] = 1
 mask[200:285,1390:1480] = 1
-
 #masking misc blooming:
 mask[3370:7420,770:784] = 1
 mask[3200:3279,770:784] = 1
-
 #masking the stars (identified by eye)
 mask[1230:1652,3000:3425] = 1
 mask[2228:2369,858:978] = 1
@@ -110,7 +107,7 @@ plt.figure()
 plt.imshow(mask)
 #plt.figure()
 #plt.imshow(np.log10(data))
-
+#print('we have removed this many data points: ', np.count_nonzero(mask))
 
 #sums values of pixels inside 1st aperture, pixels of galaxy
 def galaxyPhotons(x_centre,y_centre, radius):
@@ -141,19 +138,31 @@ def pixelPos(data, value):
 	return listIndices
 
 
-# initialRadius = 6 #this can be varied as an extension to account for differently sized galaxies
-# secondaryRadius=10 #this number needs to be better identified, but for now choose arbitrarily
-# galaxyCounts = []
+initialRadius = 6 #this can be varied as an extension to account for differently sized galaxies
+secondaryRadius=10 #this number needs to be better identified, but for now choose arbitrarily
+galaxyCounts = []
 
-# for i in range(len(hist_data_sorted)):  
-# 	print(i/len(hist_data_sorted)*100)
-# 	tempPixVal = hist_data_sorted[-(1+i)] #find next highest pixel value in image
-# 	if tempPixVal > meanBackground+sigmaBackground: #if the pixel is significantly brighter than background mean, continue
-# 		tempPixPos = pixelPos(data, tempPixVal) #find position of this pixel value
-# 		for j in range(len(tempPixPos)): #potentially multiple locations with same pixel value, so iterate through them
-# 			loc = tempPixPos[j]
-# 			if mask[loc[1],loc[0]] == 0: #if pixel is available to use according to mask
-# 				galaxyBrightness=galaxyPhotons(loc[1],loc[0],initialRadius)
-# 				galaxyBackground = localBackground(loc[1],loc[0],initialRadius, secondaryRadius)
-# 				galaxyCounts.append(galaxyBrightness-galaxyBackground)
-# #it would be more efficient to assess mask image earlier, but unsure how to do this
+#reduces the image data set to only include unmasked values
+for j in range(imagey):
+    for i in range (imagex):
+        if mask[j][i] != 0 :
+            reduced_data[j][i] = 0
+
+
+#allData[i] = list(filter(lambda a: a !=0, allData[i]))
+reduced_hist_data=reduced_data.ravel() #made data file a 1d reduced array of pixel values
+reduced_hist_data = list(filter(lambda a:a !=0, reduced_hist_data)) 
+reduced_hist_data_sorted=sorted(reduced_hist_data) #sorts into ascending order
+            
+    
+
+for i in range(len(reduced_hist_data_sorted)):  
+ 	print(i/len(reduced_hist_data_sorted)*100)
+ 	tempPixVal = reduced_hist_data_sorted[-(1+i)] #find next highest pixel value in image
+ 	if tempPixVal > meanBackground+sigmaBackground: #if the pixel is significantly brighter than background mean, continue
+         tempPixPos = pixelPos(data, tempPixVal) #find position of this pixel value
+         for j in range(len(tempPixPos)): #potentially multiple locations with same pixel value, so iterate through them
+             loc = tempPixPos[j]
+             galaxyBrightness=galaxyPhotons(loc[1],loc[0],initialRadius)
+             galaxyBackground = localBackground(loc[1],loc[0],initialRadius, secondaryRadius)
+             galaxyCounts.append(galaxyBrightness-galaxyBackground)
