@@ -60,7 +60,7 @@ while N > 0 :
 #print('pixel val 2 sig from the mean', xhistogram[np.abs(xhistogram - (popt[1]+ 2*popt[2])).argmin()])
 #print('pixel val 2 sig from the mean', xhistogram[np.abs(xhistogram - (popt[1]+ 3*popt[2])).argmin()])
 meanBackground = popt[1]
-sigmaBackground = popt[2]*1000 # this can be altered accordingly - used to determine if galaxy significant
+sigmaBackground = popt[2] # this can be altered accordingly - used to determine if galaxy significant
 
 #0 value means pixel can be considered
 #1 value means pixel should be ignored
