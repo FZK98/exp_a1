@@ -110,7 +110,7 @@ plt.figure()
 plt.imshow(mask)
 #plt.figure()
 #plt.imshow(np.log10(data))
-print('we have this many data points: ',np.count_nonzero(mask))
+
 
 #sums values of pixels inside 1st aperture, pixels of galaxy
 def galaxyPhotons(x_centre,y_centre, radius):
