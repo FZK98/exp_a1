@@ -22,11 +22,6 @@ hdulist.close()
 
 imagex = np.shape(data)[0]
 imagey = np.shape(data)[1]
-#stores ascending pixel values upto the value of 6000 
-#this excludes intrumental artifacts
-#for i in range(len(hist_data_sorted)):
-#	if hist_data_sorted[i]<6000:
-#		background_data.append(hist_data_sorted[i])
 
 #defines the Gaussian function 
 #x = position 
