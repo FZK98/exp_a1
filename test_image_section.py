@@ -19,8 +19,8 @@ hist_data=data.ravel() #made data file a 1d array of pixel values
 hist_data_sorted=sorted(hist_data) #sort data points into ascending order
 background_data=[] #empty list - store the relevant background data
 hdulist.close()
-datatest = data[880:1059,1915:2222] #[y,x]
-plt.imshow(np.log(datatest))
+datatest = data[2700:3200,300:750] #[y,x]
+#plt.imshow(np.log(datatest))
 testimagex = np.shape(datatest)[0]
 testimagey = np.shape(datatest)[1]
 masktest = np.zeros((testimagex,testimagey))
@@ -36,7 +36,7 @@ def galaxyPhotons(x_centre,y_centre, radius):
 				d=np.sqrt((i-x_centre)**2+(j-y_centre)**2)
 				if d<radius: 
 					photon_vals.append(datatest[i,j])
-				masktest[i,j]=1
+				
 	return(np.sum(photon_vals))
 
 #averages values of pixels between 1st and 2nd aperture, local bakcground mean
@@ -48,6 +48,7 @@ def localBackground(x_centre,y_centre, initialRadius, secondaryRadius):
 				d2=np.sqrt((i-x_centre)**2+(j-y_centre)**2)
 				if d2<secondaryRadius and d2>initialRadius: #only consider pixels between the two apertures
 					bg_photon_vals.append(datatest[i,j])
+				masktest[i,j]=1
 	return(np.sum(bg_photon_vals)/len(bg_photon_vals))
 
 def pixelPos(data, value):
@@ -56,12 +57,13 @@ def pixelPos(data, value):
 	return listIndices
 
 	
-initialRadius = 12
-secondaryRadius = 15
+initialRadius = 6
+secondaryRadius = 10
 galaxyCounts = []
+galaxyLocation = []
 for i in range(len(datatest1d_sorted)): 
 	tempPixVal = datatest1d_sorted[-(1+i)] #find highest pixel value
-	if tempPixVal > np.mean(datatest)+np.std(datatest):
+	if tempPixVal > popt[1]+4*popt[2]:
 		tempPixPos = pixelPos(datatest, tempPixVal) #find position of highest pixel value
 		for j in range(len(tempPixPos)): #potentially multiple locations with same pixel value
 			loc = tempPixPos[j]
@@ -69,6 +71,14 @@ for i in range(len(datatest1d_sorted)):
 				galaxyBrightness=galaxyPhotons(loc[1],loc[0],initialRadius)
 				galaxyBackground = localBackground(loc[1],loc[0],initialRadius, secondaryRadius)
 				galaxyCounts.append(galaxyBrightness-galaxyBackground)
+				galaxyLocation.append(loc)
 				print(tempPixVal)
+#plt.figure()
+#plt.imshow(masktest)
 plt.figure()
-plt.imshow(masktest)			
+plt.imshow(np.log10(datatest), cmap='jet')		
+for i in galaxyLocation:
+	mycircle = plt.Circle(i, initialRadius, color= 'k',fill=False)
+	plt.gca().add_artist(mycircle)
+	mycircle2 = plt.Circle(i, secondaryRadius, color= 'k',fill=False)
+	plt.gca().add_artist(mycircle2)
