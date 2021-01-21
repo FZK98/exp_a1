@@ -51,7 +51,6 @@ popt, pcov = sp.optimize.curve_fit(gaussian_fit, xhistogram[0:-1], yhistogram, [
 #plt.plot(i, gaussian_fit(i, *popt))
 #plt.show()
 
-
 #N is the number of noisy data points below the estimated mean
 N = sum(yhistogram[0: np.abs(xhistogram - popt[1]).argmin()])
 muindex = np.abs(xhistogram - popt[1]).argmin()
@@ -103,12 +102,29 @@ for i in range (imagex):
                 mask[i,j] = 1
             if 3200<= i <= 3279:
                 mask[i,j] = 1
-
-#plt.figure()
-#plt.imshow(mask)
-#plt.figure()
-#plt.imshow(data)
-
+#masking the stars (identified by eye)
+mask[2228:2369,858:978] = 1
+mask[2700:2843,916:1031] = 1
+mask[3197:3423,712:830] = 1
+mask[3713:3813,2097:2180] = 1
+mask[3267:3340,2222:2304] = 1
+mask[2940:3465,1182:1690] = 1
+mask[2268:2346,2091:2171] = 1
+mask[1371:1464,2043:2140] = 1
+mask[1746:1814,1375:1446] = 1
+mask[4015:4061,1429:1490] = 1
+mask[2250:2306,2280:2324] = 1
+mask[3820:3875,2249:2302] = 1
+mask[3819:3879,2242:2308] = 1
+mask[2277:2330,425:472] = 1
+mask[1465:1516,609:667] = 1
+mask[540:605,1734:1813] = 1
+mask[4066:4131,525:587] = 1
+plt.figure()
+plt.imshow(mask)
+plt.figure()
+plt.imshow(np.log10(data))
+"""
 #sums values of pixels inside 1st aperture, pixels of galaxy
 def galaxyPhotons(x_centre,y_centre, radius):
 	photon_vals=[];
@@ -142,8 +158,8 @@ initialRadius = 6 #this can be varied as an extension to account for differently
 secondaryRadius=10 #this number needs to be better identified, but for now choose arbitrarily
 galaxyCounts = []
 
-for i in range(len(hist_data_sorted)): 
-	print(i/len(hist_data_sorted)*100) #just prints how far through you are when running because it takes a while!
+for i in range(len(hist_data_sorted)):  
+	print(i/len(hist_data_sorted)*100)
 	tempPixVal = hist_data_sorted[-(1+i)] #find next highest pixel value in image
 	if tempPixVal > meanBackground+sigmaBackground: #if the pixel is significantly brighter than background mean, continue
 		tempPixPos = pixelPos(data, tempPixVal) #find position of this pixel value
@@ -154,3 +170,4 @@ for i in range(len(hist_data_sorted)):
 				galaxyBackground = localBackground(loc[1],loc[0],initialRadius, secondaryRadius)
 				galaxyCounts.append(galaxyBrightness-galaxyBackground)
 #it would be more efficient to assess mask image earlier, but unsure how to do this
+"""
