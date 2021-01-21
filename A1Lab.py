@@ -115,11 +115,11 @@ mask[2277:2330,425:472] = 1
 mask[1465:1516,609:667] = 1
 mask[540:605,1734:1813] = 1
 mask[4066:4131,525:587] = 1
-plt.figure()
-plt.imshow(mask)
-plt.figure()
-plt.imshow(np.log10(data))
-"""
+#plt.figure()
+#plt.imshow(mask)
+#plt.figure()
+#plt.imshow(np.log10(data))
+
 #sums values of pixels inside 1st aperture, pixels of galaxy
 def galaxyPhotons(x_centre,y_centre, radius):
 	photon_vals=[];
@@ -165,4 +165,4 @@ for i in range(len(hist_data_sorted)):
 				galaxyBackground = localBackground(loc[1],loc[0],initialRadius, secondaryRadius)
 				galaxyCounts.append(galaxyBrightness-galaxyBackground)
 #it would be more efficient to assess mask image earlier, but unsure how to do this
-"""
+
