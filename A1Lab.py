@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Jan  14 20:37:39 2021
-
 @author: User
 """
 #import relevant libraries
@@ -20,8 +19,8 @@ hist_data_sorted=sorted(hist_data) #sort data points into ascending order
 background_data=[] #empty list - store the relevant background data
 hdulist.close()
 
-imagex = np.shape(data)[0]
-imagey = np.shape(data)[1]
+imagey = np.shape(data)[0]
+imagex = np.shape(data)[1]
 
 #defines the Gaussian function 
 #x = position 
@@ -67,37 +66,29 @@ sigmaBackground = popt[2] # this can be altered accordingly - used to determine 
 mask = np.zeros((np.shape(data)[0],np.shape(data)[1])) #initiate a mask image (need to swap x and y round)
 
 #masking of foreground pixels including stars, bleeding and noisy edges
-for i in range (imagex):
-    for j in range(imagey):
+for i in range (imagey):
+    for j in range(imagex):
         #masking the borders
         if i <= 200 or j <= 200 or j >= 2370 or i>= 4411: 
             mask[i,j] = 1
+        # masking pixel values below 2 std devs from the mean 
+        if data[i][j] <= popt[1] + 2*popt[2]:
+            mask[i][j] = 1
 
-        #masking pixel values below 2 std devs from the mean 
-       # if mask[i][j] <= popt[1] + 2*popt[2]:
-       #     mask[i][j] = 1
-        #mask the central vertical bloom 
-        if 1425 <= j <= 1447:
-            mask[i,j] = 1
+#masking central vertical bloom
+mask[:,1425:1447] = 1
 
-        #mask the central brightest star
-        if 1230 <= j <= 1652 and 3000 <= i <= 3425:
-            mask[i,j] = 1
+#mask horizontal blooming
+mask[415:480,1195:1655] = 1
+mask[310:380,1020:1705] = 1
+mask[200:285,1390:1480] = 1
 
-        #masking 3 horizontal blooms (with rectangles)
-        if 1193 <= j <= 1655 and 418 <= i <= 477:
-            mask[i,j] = 1
-        if 1020 <= j <= 1706 and 310 <= i <= 378:
-            mask[i,j] = 1
-        if 1392 <= j <= 1477 and 200 <= i <= 283:
-            mask[i,j] = 1
-        #masking small blooming patch on the central LHS
-        if 770 <= j <= 784:
-            if 3370<= i <=3420 :
-                mask[i,j] = 1
-            if 3200<= i <= 3279:
-                mask[i,j] = 1
+#masking misc blooming:
+mask[3370:7420,770:784] = 1
+mask[3200:3279,770:784] = 1
+
 #masking the stars (identified by eye)
+mask[1230:1652,3000:3425] = 1
 mask[2228:2369,858:978] = 1
 mask[2700:2843,916:1031] = 1
 mask[3197:3423,712:830] = 1
@@ -115,10 +106,11 @@ mask[2277:2330,425:472] = 1
 mask[1465:1516,609:667] = 1
 mask[540:605,1734:1813] = 1
 mask[4066:4131,525:587] = 1
-#plt.figure()
-#plt.imshow(mask)
+plt.figure()
+plt.imshow(mask)
 #plt.figure()
 #plt.imshow(np.log10(data))
+print('we have this many data points: ',np.count_nonzero(mask))
 
 #sums values of pixels inside 1st aperture, pixels of galaxy
 def galaxyPhotons(x_centre,y_centre, radius):
@@ -149,20 +141,19 @@ def pixelPos(data, value):
 	return listIndices
 
 
-initialRadius = 6 #this can be varied as an extension to account for differently sized galaxies
-secondaryRadius=10 #this number needs to be better identified, but for now choose arbitrarily
-galaxyCounts = []
+# initialRadius = 6 #this can be varied as an extension to account for differently sized galaxies
+# secondaryRadius=10 #this number needs to be better identified, but for now choose arbitrarily
+# galaxyCounts = []
 
-for i in range(len(hist_data_sorted)):  
-	print(i/len(hist_data_sorted)*100)
-	tempPixVal = hist_data_sorted[-(1+i)] #find next highest pixel value in image
-	if tempPixVal > meanBackground+sigmaBackground: #if the pixel is significantly brighter than background mean, continue
-		tempPixPos = pixelPos(data, tempPixVal) #find position of this pixel value
-		for j in range(len(tempPixPos)): #potentially multiple locations with same pixel value, so iterate through them
-			loc = tempPixPos[j]
-			if mask[loc[1],loc[0]] == 0: #if pixel is available to use according to mask
-				galaxyBrightness=galaxyPhotons(loc[1],loc[0],initialRadius)
-				galaxyBackground = localBackground(loc[1],loc[0],initialRadius, secondaryRadius)
-				galaxyCounts.append(galaxyBrightness-galaxyBackground)
-#it would be more efficient to assess mask image earlier, but unsure how to do this
-
+# for i in range(len(hist_data_sorted)):  
+# 	print(i/len(hist_data_sorted)*100)
+# 	tempPixVal = hist_data_sorted[-(1+i)] #find next highest pixel value in image
+# 	if tempPixVal > meanBackground+sigmaBackground: #if the pixel is significantly brighter than background mean, continue
+# 		tempPixPos = pixelPos(data, tempPixVal) #find position of this pixel value
+# 		for j in range(len(tempPixPos)): #potentially multiple locations with same pixel value, so iterate through them
+# 			loc = tempPixPos[j]
+# 			if mask[loc[1],loc[0]] == 0: #if pixel is available to use according to mask
+# 				galaxyBrightness=galaxyPhotons(loc[1],loc[0],initialRadius)
+# 				galaxyBackground = localBackground(loc[1],loc[0],initialRadius, secondaryRadius)
+# 				galaxyCounts.append(galaxyBrightness-galaxyBackground)
+# #it would be more efficient to assess mask image earlier, but unsure how to do this
