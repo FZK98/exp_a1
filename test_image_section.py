@@ -25,6 +25,7 @@ testimagex = np.shape(datatest)[0]
 testimagey = np.shape(datatest)[1]
 masktest = np.zeros((testimagex,testimagey))
 popt = np.loadtxt('image_parameters.txt')
+mask = np.loadtext('mask.txt')
 
 
 datatest1d=datatest.ravel()
