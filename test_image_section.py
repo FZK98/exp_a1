@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Jan 19 09:57:16 2021
-
 @author: maria
 """
 
@@ -24,6 +23,7 @@ datatest = data[1500:2230,1550:2360] #[y,x]
 testimagex = np.shape(datatest)[0]
 testimagey = np.shape(datatest)[1]
 masktest = np.zeros((testimagex,testimagey))
+popt = np.loadtxt('image_parameters.txt')
 
 datatest1d=datatest.ravel()
 datatest1d_sorted = sorted(datatest1d)
