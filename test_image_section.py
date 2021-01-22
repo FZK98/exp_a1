@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Jan 19 09:57:16 2021
+
 @author: maria
 """
 
@@ -19,11 +20,11 @@ hist_data_sorted=sorted(hist_data) #sort data points into ascending order
 background_data=[] #empty list - store the relevant background data
 hdulist.close()
 datatest = data[1500:2230,1550:2360] #[y,x]
+#datatest=hdulist[0].data
 #plt.imshow(np.log(datatest))
 testimagex = np.shape(datatest)[0]
 testimagey = np.shape(datatest)[1]
 masktest = np.zeros((testimagex,testimagey))
-popt = np.loadtxt('image_parameters.txt')
 
 datatest1d=datatest.ravel()
 datatest1d_sorted = sorted(datatest1d)
@@ -37,9 +38,8 @@ def galaxyPhotons(x_centre,y_centre, radius):
 			if i<testimagex and i>=0 and j<testimagey and j>=0 and masktest[i,j] ==0: #only consider pixels within the image!
 				d=np.sqrt((i-x_centre)**2+(j-y_centre)**2)
 				if d<radius: 
-					photon_vals.append(datatest[i,j])
-				
-	return(np.sum(photon_vals))
+					photon_vals.append(datatest[i,j])			
+	return(np.sum(photon_vals), len(photon_vals))
 
 #averages values of pixels between 1st and 2nd aperture, local bakcground mean
 def localBackground(x_centre,y_centre, initialRadius, secondaryRadius):
@@ -70,9 +70,9 @@ for i in range(len(datatest1d_sorted)):
 		for j in range(len(tempPixPos)): #potentially multiple locations with same pixel value
 			loc = tempPixPos[j]
 			if masktest[loc[1],loc[0]] == 0: #if pixel is available to use 
-				galaxyBrightness=galaxyPhotons(loc[1],loc[0],initialRadius)
+				galaxyBrightness=galaxyPhotons(loc[1],loc[0],initialRadius)[0]
 				galaxyBackground = localBackground(loc[1],loc[0],initialRadius, secondaryRadius)
-				galaxyCounts.append(galaxyBrightness-galaxyBackground)
+				galaxyCounts.append(galaxyBrightness-(galaxyBackground*galaxyPhotons(loc[1],loc[0],initialRadius)[1]))
 				galaxyLocation.append(loc)
 				print(tempPixVal)
 #plt.figure()
@@ -85,13 +85,13 @@ for i in galaxyLocation:
 	mycircle2 = plt.Circle(i, secondaryRadius, color= 'k',fill=False)
 	plt.gca().add_artist(mycircle2)
 	
-ZP=2.530E+01
-def calculateMagnitude(data_points, ZP):
-	magnitudes = []
-	for i in data_points:
-		tempMag = ZP-(2.5*np.log10(i))
-		magnitudes.append(tempMag)
-	return magnitudes
+#ZP=2.530E+01
+#def calculateMagnitude(data_points, ZP):
+#	magnitudes = []
+#	for i in data_points:
+#		tempMag = ZP-(2.5*np.log10(i))
+#		magnitudes.append(tempMag)
+#	return magnitudes
 
-plt.figure()
-plt.hist(calculateMagnitude(galaxyCounts, ZP))
+#plt.figure()
+#plt.hist(calculateMagnitude(galaxyCounts, ZP))
