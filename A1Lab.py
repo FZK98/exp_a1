@@ -20,51 +20,19 @@ hist_data_sorted=sorted(hist_data) #sort data points into ascending order
 background_data=[] #empty list - store the relevant background data
 hdulist.close()
 
+#number of rows on the image
 imagey = np.shape(data)[0]
+#number of columns on the image
 imagex = np.shape(data)[1]
-
-#defines the Gaussian function 
-#x = position 
-#a = peak height 
-#mu = avg 
-#sig = std dev
-def gaussian_fit(x,a,mu,sig):
-    gaussian = a*np.exp(-(x-mu)**2/(2*sig**2))
-    return gaussian
-
-#bin frequencies and bins from histogram data (one bin for each pixel value)
-yhistogram, xhistogram = np.histogram(hist_data, bins=np.max(hist_data))
-#popt has optimized variable values 
-#fit the scipy function to the data
-popt, pcov = sp.optimize.curve_fit(gaussian_fit, xhistogram[0:-1], yhistogram, [8000000, 3420, 20])
-#plot the histogram 
-#plt.ylabel("Bin frequency")
-#plt.xlabel("Pixel value")
-#plt.hist(hist_data,bins=np.max(hist_data))
-#i = np.linspace(3000, 4000, 1001)
-#plot the gaussian on top
-#plt.plot(i, gaussian_fit(i, *popt))
-#plt.show()
-
-#N is the number of noisy data points below the estimated mean
-N = sum(yhistogram[0: np.abs(xhistogram - popt[1]).argmin()])
-muindex = np.abs(xhistogram - popt[1]).argmin()
-i = 0
-#finds the value of xhistogram that is N datapoints above the mean 
-while N > 0 : 
-    N -= yhistogram[muindex - 1]
-    i +=1
-    
-#print('the pixel val N points away from the mean', xhistogram[muindex+i])
-#print('pixel val 1 sig from the mean', xhistogram[np.abs(xhistogram - (popt[1]+ popt[2])).argmin()])
-#print('pixel val 2 sig from the mean', xhistogram[np.abs(xhistogram - (popt[1]+ 2*popt[2])).argmin()])
-#print('pixel val 2 sig from the mean', xhistogram[np.abs(xhistogram - (popt[1]+ 3*popt[2])).argmin()])
+popt = np.loadtxt('image_parameters.txt')
+#mean pixel value
 meanBackground = popt[1]
+#standard dev of pixel values
 sigmaBackground = popt[2] # this can be altered accordingly - used to determine if galaxy significant
 
 #0 value means pixel can be considered
 #1 value means pixel should be ignored
-mask = np.zeros((np.shape(data)[0],np.shape(data)[1])) #initiate a mask image (need to swap x and y round)
+mask = np.zeros((imagey,imagex)) #initiate a mask image 
 
 #masking of foreground pixels including stars, bleeding and noisy edges
 for i in range (imagey):
@@ -75,6 +43,10 @@ for i in range (imagey):
         # masking pixel values below 2 std devs from the mean 
         if data[i][j] <= popt[1] + 2*popt[2]:
             mask[i][j] = 1
+        #mask oversaturated pixels
+        if data[i][j] >= 50000:
+            mask[i][j] = 1
+
 #masking central vertical bloom
 mask[:,1425:1447] = 1
 #mask horizontal blooming
@@ -103,11 +75,13 @@ mask[2277:2330,425:472] = 1
 mask[1465:1516,609:667] = 1
 mask[540:605,1734:1813] = 1
 mask[4066:4131,525:587] = 1
-plt.figure()
-plt.imshow(mask)
+# plt.figure()
+# plt.imshow(mask)
 #plt.figure()
 #plt.imshow(np.log10(data))
-#print('we have removed this many data points: ', np.count_nonzero(mask))
+#print('we have this many data points: ', imagex*imagey - np.count_nonzero(mask))
+
+
 
 #sums values of pixels inside 1st aperture, pixels of galaxy
 def galaxyPhotons(x_centre,y_centre, radius):
@@ -119,7 +93,7 @@ def galaxyPhotons(x_centre,y_centre, radius):
 				if d<radius: 
 					photon_vals.append(data[i,j])
 				mask[i,j]=1
-	return(np.sum(photon_vals)) #returns total photon counts for the galaxy
+	return(np.sum(photon_vals), len(photon_vals)) #returns total photon count for the galaxy
 	
 #averages values of pixels between 1st and 2nd aperture, local bakcground mean	
 def localBackground(x_centre,y_centre, initialRadius, secondaryRadius):
@@ -149,20 +123,19 @@ for j in range(imagey):
             reduced_data[j][i] = 0
 
 
-#allData[i] = list(filter(lambda a: a !=0, allData[i]))
+
 reduced_hist_data=reduced_data.ravel() #made data file a 1d reduced array of pixel values
-reduced_hist_data = list(filter(lambda a:a !=0, reduced_hist_data)) 
+reduced_hist_data = list(filter(lambda a:a !=0, reduced_hist_data)) #removing all 0s
 reduced_hist_data_sorted=sorted(reduced_hist_data) #sorts into ascending order
             
     
 
 for i in range(len(reduced_hist_data_sorted)):  
- 	print(i/len(reduced_hist_data_sorted)*100)
- 	tempPixVal = reduced_hist_data_sorted[-(1+i)] #find next highest pixel value in image
- 	if tempPixVal > meanBackground+sigmaBackground: #if the pixel is significantly brighter than background mean, continue
-         tempPixPos = pixelPos(data, tempPixVal) #find position of this pixel value
-         for j in range(len(tempPixPos)): #potentially multiple locations with same pixel value, so iterate through them
-             loc = tempPixPos[j]
-             galaxyBrightness=galaxyPhotons(loc[1],loc[0],initialRadius)
-             galaxyBackground = localBackground(loc[1],loc[0],initialRadius, secondaryRadius)
-             galaxyCounts.append(galaxyBrightness-galaxyBackground)
+    print(i/len(reduced_hist_data_sorted)*100)
+    tempPixVal = reduced_hist_data_sorted[-(1+i)] #find next highest pixel value in image
+    tempPixPos = pixelPos(reduced_data, tempPixVal) #find position of this pixel value
+    for j in range(len(tempPixPos)): #potentially multiple locations with same pixel value, so iterate through them
+        loc = tempPixPos[j]
+        galaxyBrightness=galaxyPhotons(loc[1],loc[0],initialRadius)
+        galaxyBackground = localBackground(loc[1],loc[0],initialRadius, secondaryRadius)
+        galaxyCounts.append(galaxyBrightness[0]-galaxyBackground*galaxyBrightness[1])
