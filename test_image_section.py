@@ -37,7 +37,7 @@ def galaxyPhotons(x_centre,y_centre, radius):
 				if d<radius: 
 					photon_vals.append(datatest[i,j])
 				
-	return(np.sum(photon_vals))
+	return(np.sum(photon_vals)/len(photon_vals))
 
 #averages values of pixels between 1st and 2nd aperture, local bakcground mean
 def localBackground(x_centre,y_centre, initialRadius, secondaryRadius):
