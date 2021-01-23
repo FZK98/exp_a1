@@ -18,14 +18,15 @@ hist_data=data.ravel() #made data file a 1d array of pixel values
 hist_data_sorted=sorted(hist_data) #sort data points into ascending order
 background_data=[] #empty list - store the relevant background data
 hdulist.close()
-datatest = data[1500:2230,1550:2360] #[y,x]
-#datatest=hdulist[0].data
+#datatest = data[1500:2230,1550:2360] #[y,x]
+datatest=hdulist[0].data
+reduced_data = hdulist[0].data
 #plt.imshow(np.log(datatest))
 testimagex = np.shape(datatest)[0]
 testimagey = np.shape(datatest)[1]
 masktest = np.zeros((testimagex,testimagey))
 popt = np.loadtxt('image_parameters.txt')
-mask = np.loadtext('mask.txt')
+mask = np.loadtxt('mask.txt')
 
 
 datatest1d=datatest.ravel()
@@ -42,6 +43,11 @@ def galaxyPhotons(x_centre,y_centre, radius):
 				if d<radius: 
 					photon_vals.append(datatest[i,j])			
 	return(np.sum(photon_vals), len(photon_vals))
+	
+#def galaxyPhotons2(x_centre, y_centre, radius):
+#	for i in range(x_centre-radius,x_centre+radius):
+#		for j in range(y_centre-radius,y_centre+radius):
+#			 
 
 #averages values of pixels between 1st and 2nd aperture, local bakcground mean
 def localBackground(x_centre,y_centre, initialRadius, secondaryRadius):
@@ -60,13 +66,22 @@ def pixelPos(data, value):
 	listIndices= list(zip(indices[1], indices[0])) # gives pairs of coordinates in form (x,y)
 	return listIndices
 
-	
+#reduces the image data set to only include unmasked values
+for j in range(testimagey):
+    for i in range (testimagex):
+        if mask[i,j] == 0 :
+            reduced_data[i,j] = 0
+
+reduced_hist_data=reduced_data.ravel() #made data file a 1d reduced array of pixel values
+reduced_hist_data = list(filter(lambda a:a !=0, reduced_hist_data)) #removing all 0s
+reduced_hist_data_sorted=sorted(reduced_hist_data) #sorts into ascending order
+
 initialRadius = 6
 secondaryRadius = 15
 galaxyCounts = []
 galaxyLocation = []
-for i in range(len(datatest1d_sorted)): 
-	tempPixVal = datatest1d_sorted[-(1+i)] #find highest pixel value
+for i in range(len(reduced_hist_data_sorted)): 
+	tempPixVal = reduced_hist_data_sorted[-(1+i)] #find highest pixel value
 	if tempPixVal > popt[1]+4*popt[2]:
 		tempPixPos = pixelPos(datatest, tempPixVal) #find position of highest pixel value
 		for j in range(len(tempPixPos)): #potentially multiple locations with same pixel value
