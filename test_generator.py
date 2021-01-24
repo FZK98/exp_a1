@@ -11,6 +11,8 @@ object_loc = []
 image_size = 500
 import numpy as np
 import matplotlib.pyplot as plt
+import random
+
 
 basearray = np.zeros((image_size,image_size*2)) #test image
 masktest = np.zeros((image_size,image_size*2)) #mask image for test
@@ -22,20 +24,32 @@ for i in range(image_size):
 for i in range(no_objects):
 	object_loc.append(((np.random.randint(0,image_size)),(np.random.randint(0,image_size*2)))) #assigning random locations to "galaxies"
 	i += 1
-
+def gaussian2d(a, mux, muy, sigma,x, y):
+	gauss = a*np.exp(-((x-mux)**2/(2*sigma**2))-((y-muy)**2/(2*sigma**2)))
+	return gauss
 for i in range(no_objects):
 	loctemp=object_loc[i]
-	basearray[loctemp[0]][loctemp[1]] = 1000+np.random.randint(0,500) #assign galaxies a value 1000-1500
-	basearray[loctemp[0]+1][loctemp[1]] = 1000
-	basearray[loctemp[0]][loctemp[1]+1]= 1000
-	basearray[loctemp[0]+1][loctemp[1]+1]= 1000
-	basearray[loctemp[0]-1][loctemp[1]]= 1000
-	basearray[loctemp[0]][loctemp[1]-1]= 1000
-	basearray[loctemp[0]-1][loctemp[1]-1]= 1000
-	basearray[loctemp[0]+1][loctemp[1]-1]= 1000
-	basearray[loctemp[0]-1][loctemp[1]+1]= 1000 #extend galaxies to 3x3 with outer vals 1000
+	x_centre=loctemp[0]
+	y_centre=loctemp[1]
+	for j in range(x_centre-6,x_centre+6):
+		for k in range(y_centre-6,y_centre+6):
+			basearray[j,k] = gaussian2d(1500,x_centre, y_centre, 3, j, k)
+
+"""	
+#for i in range(no_objects):
+#	loctemp=object_loc[i]
+#	basearray[loctemp[0]][loctemp[1]] = 1000+np.random.randint(0,500) #assign galaxies a value 1000-1500
+#	basearray[loctemp[0]+1][loctemp[1]] = 1000
+#	basearray[loctemp[0]][loctemp[1]+1]= 1000
+#	basearray[loctemp[0]+1][loctemp[1]+1]= 1000
+#	basearray[loctemp[0]-1][loctemp[1]]= 1000
+#	basearray[loctemp[0]][loctemp[1]-1]= 1000
+#	basearray[loctemp[0]-1][loctemp[1]-1]= 1000
+#	basearray[loctemp[0]+1][loctemp[1]-1]= 1000
+#	basearray[loctemp[0]-1][loctemp[1]+1]= 1000 #extend galaxies to 3x3 with outer vals 1000
 	#may get indexing errors as the randomly chosen locations will be at edges - run multiple times until works
 	#this will not be an issue in the real image, so not worth properly fixing here 
+"""
 plt.figure()
 plt.imshow(basearray)
 base1d = basearray.ravel() #make test image 1D array
@@ -52,6 +66,8 @@ def galaxyPhotons(x_centre,y_centre, radius):
 					photon_vals.append(basearray[i,j])
 				masktest[i,j]=1
 	return(np.sum(photon_vals))
+	
+
 
 #averages values of pixels between 1st and 2nd aperture, local bakcground mean
 def localBackground(x_centre,y_centre, initialRadius, secondaryRadius):
